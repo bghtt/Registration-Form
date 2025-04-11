@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,9 +9,11 @@ using Npgsql;
 
 namespace Registration_Form
 {
-    public class UserRegistration
+    public class UserRegistration : IDisposable
     {
         private readonly string _connectionString;
+        private NpgsqlConnection _connection;
+        private bool _disposed = false;
 
         public UserRegistration(string connectionString)
         {
@@ -52,6 +55,15 @@ namespace Registration_Form
                 MessageBox.Show($"Ошибка при регистрации", "Ошибка",
                          MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _connection?.Dispose();
+                _disposed = true;
             }
         }
 

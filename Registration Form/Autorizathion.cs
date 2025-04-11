@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualBasic.Logging;
 using Npgsql;
 using static System.ComponentModel.Design.ObjectSelectorEditor;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -12,17 +13,18 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace Registration_Form
 {
-    internal class Autorizathion
+    internal class Autorizathion : IDisposable
     {
         private readonly string _connectionString;
         private NpgsqlConnection _connection;
+        private bool _disposed = false;
 
         public Autorizathion(string connectionString)
         {
             _connectionString = connectionString;
         }
 
-        public bool validateUser(string login, string password, Form currentForm, Form mainForm)
+        public bool validateUser(string login, string password, Form currentForm)
         {
             try 
             {
@@ -35,22 +37,12 @@ namespace Registration_Form
                 {
                     connection.Open();
 
-                    bool userExist = CheckUserExists(connection, login);
-                    if (!userExist)
-                    {
-                        MessageBox.Show("Пользователь не найден");
-                        return false;
-                    }
-
                     bool passwordCorrect = VerifyPassword(connection, login, password);
                     if (!passwordCorrect)
                     {
                         MessageBox.Show("Неверный пароль");
                         return false;
                     }
-
-                    currentForm.Hide();
-                    mainForm.Show();
                     return true;
                 }
                 
@@ -69,6 +61,20 @@ namespace Registration_Form
             {
                 cmd.Parameters.AddWithValue("@username", login);
                 return cmd.ExecuteScalar() != null;
+            }
+        }
+
+        public bool GetUserExist(NpgsqlConnection connection, string login)
+        {
+            return CheckUserExists(connection, login);
+        }
+        
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _connection?.Dispose();
+                _disposed = true;
             }
         }
 

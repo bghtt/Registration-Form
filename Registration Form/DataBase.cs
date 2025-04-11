@@ -47,5 +47,10 @@ namespace Registration_Form
 
             return new NpgsqlCommand(query, _connection);
         }
+
+        public void Dispose()
+        {
+            _connection?.Dispose();
+        }
     }
 }

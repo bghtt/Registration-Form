@@ -12,13 +12,16 @@ namespace Registration_Form
 {
     public partial class Form2 : Form
     {
-        public Form2()
+        private readonly Form _previousForm;
+        public Form2(Form previousForm)
         {
             InitializeComponent();
-            this.FormClosed += (s, args) => {
-                var form1 = new Form1();
-                form1.Show();
-            }; ;
+            _previousForm = previousForm;
+
+            this.FormClosed += (s, args) =>
+            {
+                _previousForm.Close();
+            };
         }
     }
 }
