@@ -21,7 +21,7 @@ namespace Registration_Form
 
         public Autorizathion(string connectionString)
         {
-            _connectionString = connectionString;
+            _connectionString = connectionString; 
         }
 
         public bool validateUser(string login, string password, Form currentForm)
