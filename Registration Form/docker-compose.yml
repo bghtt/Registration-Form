@@ -1,0 +1,15 @@
+﻿services: 
+  db:
+    image: postgres:17.0
+    environment:
+      POSTGRES_PASSWORD: "rootroot"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "aboba"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U USER -d aboba"]
+      interval: 5s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/data
+volumes:
+  db-data:

@@ -17,3 +17,8 @@
 ``` C#
    private string _connectionString = "Host=your_server;Username=your_user;Password=your_password;Database=your_db";
    ```
+# Запуск приложения
+Для запуска приложения выполните одну из следующих команд, в зависимости от установленной версии Docker Compose:
+``` C#
+   dockercompose up --build
+```
