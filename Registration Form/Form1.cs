@@ -1,5 +1,6 @@
 
 using System.Data;
+using System.Net;
 using System.Net.Http.Headers;
 using Npgsql;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
@@ -8,13 +9,11 @@ namespace Registration_Form
 {
     public partial class Form1 : Form
     {
-        private readonly string _connectionString = "server=localhost;Port=5432;Database=aboba;User Id = postgres; Password=rootroot";
-        private readonly Autorizathion _authService;
         public Form1()
         {
             InitializeComponent();
-            _authService = new Autorizathion(_connectionString);
         }
+
         private void buttonLogin_Click(object sender, EventArgs e)
         {
             string login = loginField.Text;
@@ -22,51 +21,30 @@ namespace Registration_Form
 
             if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
             {
-                MessageBox.Show("Введите логин и пароль", "Ошибка",
-                              MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Введите логин и пароль", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            try
+            if (!Autorizathion.GetUserExists(login))
             {
-                using (var connection = new NpgsqlConnection(_connectionString))
-                {
-                    connection.Open();
+                var result = MessageBox.Show("Пользователь не найден. Хотите зарегистрироваться?",
+                                          "Регистрация",
+                                          MessageBoxButtons.YesNo,
+                                          MessageBoxIcon.Question);
+                if (result == DialogResult.Yes)
+                    button2.PerformClick();
 
-                    using (var auth = new Autorizathion(_connectionString))
-                    {
-                        bool userExists = auth.GetUserExist(connection, login);
-
-                        if (!userExists)
-                        {
-
-                            var result = MessageBox.Show("Пользователь не найден. Хотите зарегистрироваться?",
-                                                      "Регистрация",
-                                                      MessageBoxButtons.YesNo,
-                                                      MessageBoxIcon.Question);
-                            if (result == DialogResult.Yes)
-                            {
-                                button2.PerformClick();
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                MessageBox.Show($"Ошибка авторизации", "Ошибка",
-                      MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            if (_authService.validateUser(login, password, this))
+            if (Autorizathion.ValidateUser(login, password))
             {
-                this.Hide();
+                Hide();
                 using (var mainForm = new Form2(this))
                 {
                     mainForm.ShowDialog();
                 }
-                this.Close();
+                Close();
             }
 
         }
@@ -81,30 +59,15 @@ namespace Registration_Form
                 MessageBox.Show("Введите логин и пароль");
                 return;
             }
+
             try
             {
-                using (UserRegistration reg = new UserRegistration(_connectionString))
-                {
-                    bool isRegistered = reg.RegisterUser(login, password);
-
-                    if (isRegistered)
-                    {
-                        MessageBox.Show("Регистрация прошла успешно!", "Успех",
-                                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Не удалось зарегистрировать пользователя", "Ошибка",
-                                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
+                UserRegistration.RegisterUser(login, password);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при регистрации: {ex.Message}", "Ошибка",
-                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ошибка при регистрации: {ex.Message}", "Ошибка",  MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
     }
 }

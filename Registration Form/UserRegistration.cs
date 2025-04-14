@@ -9,85 +9,29 @@ using Npgsql;
 
 namespace Registration_Form
 {
-    public class UserRegistration : IDisposable
+    public class UserRegistration
     {
-        private readonly string _connectionString;
-        private NpgsqlConnection _connection;
-        private bool _disposed = false;
+        private static AppDbContext Context = new AppDbContext();
 
-        public UserRegistration(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
-
-        public bool RegisterUser(string login, string password)
+        public static async void RegisterUser(string login, string password)
         {
             if (UserExsist(login))
             {
-                MessageBox.Show("Пользователь с таким логином уже существует", "Ошибка",
-                          MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
+                MessageBox.Show("Пользователь с таким логином уже существует", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
             string passwordHash = PasswordHasher.HashPassword(password);
 
-            try
-            {
-                using(var connection = new NpgsqlConnection(_connectionString))
-                using(var cmd = new NpgsqlCommand())
-                {
-                    connection.Open();
-                    cmd.Connection = connection;
+            await Context.AddAsync(new User { Name = login, Password = passwordHash });
+            await Context.SaveChangesAsync();
 
-                    cmd.CommandText = @"INSERT INTO ""Пользователи"" (""Name"", ""password"") VALUES(@login, @password)";
-                    cmd.Parameters.AddWithValue("@login", login);
-                    cmd.Parameters.AddWithValue("@password", passwordHash);
-
-                    cmd.ExecuteNonQuery();
-
-                    MessageBox.Show("Регистрация прошла успешно!", "Успех",
-                                  MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return true;
-                }
-            }
-            catch
-            {
-                MessageBox.Show($"Ошибка при регистрации", "Ошибка",
-                         MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
+            MessageBox.Show("Регистрация прошла успешно!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        public void Dispose()
+        private static bool UserExsist(string login)
         {
-            if (!_disposed)
-            {
-                _connection?.Dispose();
-                _disposed = true;
-            }
-        }
-
-        private bool UserExsist(string login)
-        {
-            try
-            {
-                using (var connection = new NpgsqlConnection(_connectionString))
-                using (var cmd = new NpgsqlCommand())
-                {
-                    connection.Open();
-                    cmd.Connection = connection;
-
-                    cmd.CommandText = @"SELECT 1 FROM ""Пользователи"" WHERE ""Name"" = @login LIMIT 1";
-                    cmd.Parameters.AddWithValue("@login", login);
-
-                    return cmd.ExecuteScalar() != null;
-                }
-
-            }
-            catch
-            {
-                return false;
-            }
+            return Context.Users.Any(x => x.Name == login);
         }
     }
 
